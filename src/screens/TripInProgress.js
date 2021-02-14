@@ -70,12 +70,15 @@ const TripInProgress = ({route, navigation}) => {
 
     if(activityData.started) {
       console.log("resuming activity");
-      await activity.resumeActivity(activityData);
+      let prevStored = await activity.resumeActivity(activityData);
+      console.log(prevStored);
+      setCheckpoints(prevStored);
     } else {
       try {
         // todo check if activity hasn't started
-        await activity.startActivity(activityData.id, config_);
+        let startTime = await activity.startActivity(activityData.id, config_);
         activityData.started = true;
+        activityData.startTime = startTime;
       } catch(err) {
         util.handleError(err, "TripInProgress.constructor - startActivity");
       }
@@ -132,9 +135,10 @@ const TripInProgress = ({route, navigation}) => {
       })}
 
       <Button title="End Trip" onPress={async () => {
-        await activity.endActivity(activityData);
+        let endTime = await activity.endActivity(activityData);
 
         activityData.completed = true;
+        activityData.endTime = endTime;
         navigation.navigate('Activity', {data: activityData})
       }} />
     </View>

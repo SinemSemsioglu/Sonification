@@ -25,10 +25,12 @@ const SummaryMusic = ({route, navigation}) => {
   console.log(timeCoeff);
 
   const [recordedData, setState] = React.useState({});
+  const [prevHR, setPrevHR] = React.useState(null);
 
   const [constructorHasRun, setConstructorHasRun] = React.useState(false);
   util.useConstructor(constructorHasRun, setConstructorHasRun, async () => {
     setState(await activity.getActivityData(activityData.id))
+    await sound.initPlayers(null,true);
   });
 
   return (
@@ -38,7 +40,18 @@ const SummaryMusic = ({route, navigation}) => {
           let points = recordedData[data];
           points.forEach((pt) => {
             setTimeout(()=>{
-              sound.playAudio(data)
+              if(data == "heartRate") {
+                //todo how to define these intervals?
+                let level = "mid";
+                if (pt.value < 80) level = "low";
+                else if (pt.value > 120) level = "high";
+
+                if(prevHR !== null) sound.stopAudio(data, prevHR);
+                sound.playAudio(data, level);
+                setPrevHR(level);
+              } else {
+                sound.playAudio(data)
+              }
             }, pt.timePassed * timeCoeff);
           });
         });

@@ -71,14 +71,17 @@ const startActivity = async (id, config) => {
     currActRecord.started = true;
     currActRecord.startTime = startTime;
     await storage.saveObject("activities", activities)
+
+    return startTime;
   } catch (err) {
     util.handleError(err, "activity.startActivity");
   }
 }
 
-const initRecording = async (id, config, startTime) => {
+const initRecording = async (id, config, startTime, prevStored) => {
   try {
-    data.init(id, config, startTime, 53 * 1000);
+    await sound.initPlayers()
+    data.init(id, config, startTime, 53 * 1000, prevStored);
     google.startActivity(time.getCurrentTime('google'), 23 * 1000);
     await sensorUtil.startDataCollection(53 * 10);
   } catch (err) {
@@ -88,8 +91,8 @@ const initRecording = async (id, config, startTime) => {
 
 const resumeActivity = async(activityData) => {
   try {
-    let prevStored = await storage.getObject(activityData.id + "_data");
-    await initRecording(activityData.id, activityData.config, activityData.startTime);
+    let prevStored = data.extractLastSavedFromData(await storage.getObject(activityData.id + "_data"));
+    await initRecording(activityData.id, activityData.config, activityData.startTime, prevStored);
 
     return prevStored;
   } catch (err) {
@@ -112,15 +115,17 @@ const endActivity = async (activity) => {
   try {
     stopRecording();
     sound.clearPlayers();
+    let endTime = time.getCurrentTime();
 
     // todo get all activities, find the one with this id and add finish_time + completed: true
     let activities = await getActivities();
     let currActRecord = activities.find(act => activity.id == act.id)
     currActRecord.completed = true;
-    currActRecord.endTime = time.getCurrentTime();
+    currActRecord.endTime = endTime;
     await storage.saveObject("activities", activities)
 
     // todo get strava data if logged in & available -- maybe compare the time started/ended
+    return endTime;
   } catch (err) {
     util.handleError(err, "activity.endActivity")
   }

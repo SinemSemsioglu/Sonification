@@ -2,23 +2,27 @@ import React, {useEffect} from 'react';
 import {Linking, StatusBar} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack'
-import Home from './src/screens/Home'
-import StravaAuth from './src/screens/StravaAuth'
-import GoogleAuth from './src/screens/GoogleAuth'
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
+import Home from './src/screens/Home'
 import auth from './src/utils/auth'
 import TripInProgress from './src/screens/TripInProgress';
 import Activities from './src/screens/Activities';
 import Activity from './src/screens/Activity';
 import ConfigActivity from './src/screens/ConfigActivity';
 import SummaryMusic from './src/screens/SummaryMusic'
+import SoundDemo from './src/screens/SoundDemo';
+import SoundSelection from './src/screens/SoundSelection';
 import {navigationRef} from './RootNavigation';
 import storage from './src/utils/storage';
 import util from './src/utils/general';
+import constants from './src/constants/general';
 
 
 
-const Stack = createStackNavigator();
+//const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
 
 // TODO do this smwhereelse
 Linking.addEventListener('url', (redirectLink) => {
@@ -39,13 +43,50 @@ Linking.addEventListener('url', (redirectLink) => {
   }
 });
 
+const ActivityStack = createStackNavigator();
+
+function ActivityStackScreen() {
+  return (
+    <ActivityStack.Navigator>
+      <ActivityStack.Screen name="Activities" component={Activities} />
+      <ActivityStack.Screen name="Activity" component={Activity} />
+      <ActivityStack.Screen name="ConfigActivity" component={ConfigActivity}/>
+      <ActivityStack.Screen name="TripInProgress" component={TripInProgress}/>
+      <ActivityStack.Screen name="SummaryMusic" component={SummaryMusic}/>
+    </ActivityStack.Navigator>
+  );
+}
+
+const SoundStack = createStackNavigator();
+
+function SoundStackScreen() {
+  return (
+    <SoundStack.Navigator>
+      <SoundStack.Screen name="SoundSelection" component={SoundSelection} />
+      <SoundStack.Screen name="SoundDemo" component={SoundDemo} />
+    </SoundStack.Navigator>
+  );
+}
+
 const App: () => React$Node = () => {
   const [constructorHasRun, setConstructorHasRun] = React.useState(false);
   util.useConstructor(constructorHasRun, setConstructorHasRun, async () => {
     try {
       await storage.init();
     } catch(err) {
-      console.log("storage couldn't be initialized");
+      util.handleError(err, "App.constructor - storage init");
+    }
+
+    try {
+      let soundSet = await storage.get('soundSet');
+      if (soundSet == null || soundSet == undefined) {
+        await storage.save("soundSet", constants.defaultSoundSet);
+        console.log("soundset set to default")
+      } else {
+        console.log("current soundset is " + soundSet);
+      }
+    } catch(err) {
+      util.handleError(err, "App.constructor - soundset check/init");
     }
   });
 
@@ -68,7 +109,21 @@ const App: () => React$Node = () => {
     navigateToLink();
   });
 
+
+
   return (
+    <NavigationContainer ref={navigationRef}>
+      <Tab.Navigator>
+        <Tab.Screen name="Home" component={Home} />
+        <Tab.Screen name="Activities" component={ActivityStackScreen} />
+        <Tab.Screen name="Sounds" component={SoundStackScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+
+
+
+  /*return (
     <>
       <StatusBar barStyle="dark-content" />
       <NavigationContainer ref={navigationRef}>
@@ -144,10 +199,28 @@ const App: () => React$Node = () => {
             }}
           />
 
+          <Stack.Screen
+            name="SoundDemo"
+            component={SoundDemo}
+            options={{
+              headerTintColor: 'green',
+              title: 'Sound Demo',
+            }}
+          />
+
+          <Stack.Screen
+            name="SoundSelection"
+            component={SoundSelection}
+            options={{
+              headerTintColor: 'green',
+              title: 'Sound Demo',
+            }}
+          />
+
         </Stack.Navigator>
       </NavigationContainer>
     </>
-  );
+  );*/
 };
 
 export default App;

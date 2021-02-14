@@ -30,7 +30,11 @@ const numerifyConfigValues = (obj) => {
 }
 
 const createFromTemplate = (templateName) => {
-  return JSON.parse(JSON.stringify(templates[templateName]));
+  return deepCopy(templates[templateName]);
+}
+
+const deepCopy = (obj) => {
+  return  JSON.parse(JSON.stringify(obj));
 }
 
 module.exports = {
@@ -38,5 +42,6 @@ module.exports = {
   handleError,
   stringifyConfigValues,
   numerifyConfigValues,
-  createFromTemplate
+  createFromTemplate,
+  deepCopy
 }

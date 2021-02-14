@@ -28,7 +28,7 @@ const startDataCollection = async (updateInterval = 10000) => {
 
     await initBarometer(async (data) => {
         if(safeToSave) {
-            await handleData('altitude',data.altitude, timeStampToDef(data.timestamp))
+            await handleData('altitude',data.relativeAltitude, timeStampToDef(data.timestamp))
             setTimeout(async () => {
                 // also fake hr data
                 await handleData('pressure',data.pressure, timeStampToDef(data.timestamp))

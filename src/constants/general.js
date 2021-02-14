@@ -26,6 +26,12 @@ const dataTypes = {
   }
 }
 
+const defaultSoundSet = "synthetic";
+
+const soundSets = ["synthetic", "organic", "hybrid"];
+
 module.exports = {
-  dataTypes
+  dataTypes,
+  defaultSoundSet,
+  soundSets
 }

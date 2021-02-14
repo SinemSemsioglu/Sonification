@@ -51,7 +51,9 @@ const Home = ({route, navigation}) => {
           }}/>)
       }
       <Button title={"Your Activities"} onPress={() => {navigation.navigate("Activities")}}/>
-      <Button title={"New Activity"} onPress={() => {addActivityAndNavigate(navigation)}} />
+      <Button title={"New Activity"} onPress={async () => {await addActivityAndNavigate(navigation)}} />
+      <Button title={"Listen to Sounds"} onPress={() => {navigation.navigate("SoundDemo")}} />
+      <Button title={"Select Soundset"} onPress={() => {navigation.navigate("SoundSelection")}} />
     </View>
   );
 }

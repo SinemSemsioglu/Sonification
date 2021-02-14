@@ -13,14 +13,17 @@ let stateFunc;
 let checkpointFunc;
 let timeInterval;
 let dbInterval;
+let altitudeOffset;
 
-const init = (id_, config_, startTime_, updateInterval = 60000) => {
+const init = (id_, config_, startTime_, updateInterval = 60000, prevStored = null) => {
   config = config_;
   id = id_;
-  lastSaved = util.createFromTemplate("lastSaved");
-  state = util.createFromTemplate("lastSaved");
 
   startTime = startTime_;
+
+  lastSaved = prevStored ? prevStored : util.createFromTemplate("lastSaved");
+  state = util.deepCopy(lastSaved);
+
 
   timeInterval = setInterval(async () => {
     let currTime = time.getCurrentTime(); // getTimePassed
@@ -60,10 +63,18 @@ const handleData = async (type, currValue, currTime) => {
         case 'progress':
           prevValue = lastSaved[type].value;
 
-          if(prevValue == null) diff = 100000000; // todo maybe another value?
-          else {
+          if(prevValue == null) {
+            diff = 100000000; // todo maybe another value?
+          } else {
             diff = Math.abs(currValue - prevValue);
           }
+
+          if (type == "altitude") {
+            console.log("altitude value is " + currValue);
+            if (prevValue == null) altitudeOffset = currValue;
+            else currValue -= altitudeOffset;
+          }
+
           break;
         case 'time':
           prevValue = lastSaved[type].time;
@@ -165,10 +176,32 @@ const endCollection = () => {
   console.log("endCollection called in data.js");
 }
 
+const extractLastSavedFromData = (prevStored) => {
+  let lastSaved = {};
+
+  Object.keys(prevStored).forEach((type) => {
+    let data = prevStored[type] || [];
+    if (data.length > 0)  {
+      lastSaved[type] = {
+        time: data[data.length - 1].time,
+        value: data[data.length - 1].value,
+      }
+    } else {
+      lastSaved[type] = {
+        time: null,
+        value: null
+      };
+    }
+  })
+
+  return lastSaved;
+}
+
 module.exports = {
   init,
   handleData,
   getCurrentState,
   initStateUpdate,
-  endCollection
+  endCollection,
+  extractLastSavedFromData
 }
