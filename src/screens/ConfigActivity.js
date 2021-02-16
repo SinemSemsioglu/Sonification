@@ -1,20 +1,9 @@
 import React from 'react';
-import {StyleSheet, Button, TextInput, Text, View, Alert} from 'react-native';
+import {SafeAreaView, ScrollView, Button, TextInput, Text, View, Alert} from 'react-native';
 import util from "../utils/general";
 import activity from "../modules/general/activity";
 import {dataTypes} from '../constants/general';
-
-// todo make styles common
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 22,
-  },
-  baseText: {
-    fontFamily: "Cochin"
-  }
-});
-
+import {styles} from '../styles/general';
 
 const ConfigureTripSummary = ({route, navigation}) => {
   const activityData = route.params.data;
@@ -89,47 +78,55 @@ const ConfigureTripSummary = ({route, navigation}) => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text>When do you want to be notified of tracked data?</Text>
-      <Text>For progress tracking mode, you will be notified each time the value is reached</Text>
-      <Text>For threshold tracking mode, you will be notified each time the value is crossed.
-        If you want to be notified when going below a value use a negative sign (for example the default configuration
-        checks when pressure is below 500 hPa - the input it -500)
-      </Text>
+    <SafeAreaView>
+      <ScrollView>
+        <View style={styles.container}>
+          <Text style={[styles.description, styles.paragraph]}>When do you want to be notified of tracked data?</Text>
+          <Text style={styles.paragraph}>For progress tracking mode, you will be notified each time the value is reached</Text>
+          <Text style={styles.paragraph}>For threshold tracking mode, you will be notified each time the value is crossed.
+            If you want to be notified when going below a value use a negative sign (for example the default configuration
+            checks when pressure is below 500 hPa - the input it -500)
+          </Text>
 
-      {Object.keys(state).map((type, index) => {
-        return(
-          <View key={index}>
-            <Text style={styles.baseText}> {dataTypes[type].title} ({dataTypes[type].unit_text}) </Text>
-            <Text>The tracking mode for this parameter is {config[type].mode}</Text>
-            <TextInput
-              style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-              onChangeText={(text) => handleChange(type, text)}
-              value={state[type]}
-            />
-          </View>)
-      })}
+          <View style={styles.section}>
+            {Object.keys(state).map((type, index) => {
+              return(
+                <View style={styles.tInput} key={index}>
+                  <Text style={styles.bold}>{dataTypes[type].title} ({dataTypes[type].unit_text}) </Text>
+                  <Text>The tracking mode for this parameter is {config[type].mode}</Text>
+                  <TextInput
+                    style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
+                    onChangeText={(text) => handleChange(type, text)}
+                    value={state[type]}
+                  />
+                </View>)
+            })}
 
-      <Button title="Next" onPress={async () => {
-        try {
-          Object.keys(state).forEach((dataType) => {
-            activityData.config[dataType].interval = parseFloat(state[dataType]);
-          });
+            <View style={styles.section}>
+              <Button title="Next" onPress={async () => {
+                try {
+                  Object.keys(state).forEach((dataType) => {
+                    activityData.config[dataType].interval = parseFloat(state[dataType]);
+                  });
 
-          let data = await activity.saveActivity(activityData);
+                  let data = await activity.saveActivity(activityData);
 
-          if(data) {
-            navigation.navigate('Activity', {data})
-          } else {
-            // todo error saving activity
-            navigation.navigate('Activities', {data})
-          }
+                  if(data) {
+                    navigation.navigate('Activity', {data})
+                  } else {
+                    // todo error saving activity
+                    navigation.navigate('Activities', {data})
+                  }
 
-        } catch (err) {
-          util.handleError(err, "ConfigActivity.next")
-        }
-      }} />
-    </View>
+                } catch (err) {
+                  util.handleError(err, "ConfigActivity.next")
+                }
+              }} />
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 // todo save item data to db

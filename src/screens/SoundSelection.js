@@ -3,13 +3,16 @@ import {
   View,
   Text,
   Button,
-  Alert
+  Alert, TouchableOpacity,
 } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 
 import util from "../utils/general";
 import {soundSets} from "../constants/general";
 import storage from '../utils/storage';
+import {styles} from '../styles/general';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 const SoundDemo = ({route, navigation}) => {
 
@@ -49,6 +52,7 @@ const SoundDemo = ({route, navigation}) => {
           handleBack(e);
         } else {
           await storage.save('soundSet', selectedSoundSet);
+          consoe.log("soundset saved as " + selectedSoundSet);
         }
       }),
     [navigation, selectedSoundSet]
@@ -58,15 +62,14 @@ const SoundDemo = ({route, navigation}) => {
 
   }
 
-  const handleChange = (name, value) => {
+  const handleChange = async (name, value) => {
     let changeObj = {};
     changeObj[name] = value;
     console.log("name " + name + " value " + value);
     if(value == true) {
-      console.log("prev " + selectedSoundSet);
       if(selectedSoundSet != null) changeObj[selectedSoundSet] = false;
       setSelectedSoundSet(name);
-      console.log("next " + selectedSoundSet);
+      await storage.save('soundSet', name);
     } else {
       setSelectedSoundSet(null);
     }
@@ -77,24 +80,40 @@ const SoundDemo = ({route, navigation}) => {
   }
 
   return (
-    <View>
-      <Text>Which soundset would you like to listen to?</Text>
-      {soundSets.map((set, index)=> {
-        return (
-          <View key={index}>
-            <CheckBox
-              disabled={false}
-              value={soundSetsSelection[set]}
-              onValueChange={(newValue) => handleChange(set, newValue)}
-            />
-            <Text>{set}</Text>
-            <Button title="Listen" onPress={() => {
-              navigation.navigate("SoundDemo", {soundSet: set})
-            }}/>
-          </View>
-        )
-      })}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.section}>
+        <Text style={[styles.description, styles.centered, styles.indented]}>
+          Currently selected sound set is {selectedSoundSet}
+        </Text>
+        <View style={styles.mainAction}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => {navigation.navigate("SoundDemo", {soundSet: selectedSoundSet})}}>
+              <FontAwesomeIcon icon="headphones" size={76}></FontAwesomeIcon>
+            </TouchableOpacity>
+          <Text>Listen to Samples</Text>
+        </View>
     </View>
+      <View style={[styles.section, styles.bottomed]}>
+        <Text  style={styles.listItem}>You can configure the soundset here</Text>
+        {soundSets.map((set, index)=> {
+          return (
+            <View key={index} style={styles.listItem}>
+              <View style={styles.checkBox} >
+                <CheckBox
+                  disabled={false}
+                  value={soundSetsSelection[set]}
+                  onValueChange={(newValue) => handleChange(set, newValue)}
+                />
+                <Text>{set}</Text>
+              </View>
+
+              <TouchableOpacity style={styles.iconButton} onPress={() => {navigation.navigate("SoundDemo", {soundSet: set})}}>
+                <FontAwesomeIcon icon="headphones" size={24}></FontAwesomeIcon>
+              </TouchableOpacity>
+            </View>
+          )
+        })}
+      </View>
+    </SafeAreaView>
   )
 }
 

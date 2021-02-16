@@ -1,16 +1,21 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Button} from 'react-native';
+import {View, Text, TouchableOpacity} from 'react-native';
+import { FontAwesomeIcon} from '@fortawesome/react-native-fontawesome'
+
 import google from "../modules/google/auth"
 import activity from '../modules/general/activity';
 import util from '../utils/general';
+import storage from '../utils/storage';
+import {styles} from '../styles/general';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 
 const Home = ({route, navigation}) => {
-  const addActivityAndNavigate = async (navigation) => {
+  const addActivityAndNavigate = async () => {
     if (authorized) {
       try {
         let newActivity = await activity.createActivity();
-        navigation.navigate('ConfigActivity', {data: newActivity});
+        navigation.navigate('Activity', {screen: 'Activity', params: {data: newActivity}});
       } catch (err) {
         util.handleError(err, "Home.addActivityAndNavigate");
       }
@@ -19,66 +24,80 @@ const Home = ({route, navigation}) => {
     }
   }
 
-
   const [authorized, setAuthorized] = React.useState(false);
 
   const [constructorHasRun, setConstructorHasRun] = React.useState(false);
   util.useConstructor(constructorHasRun, setConstructorHasRun, async () => {
     try {
-      setAuthorized(await google.checkAuthorized());
+      let isAuth = await google.checkAuthorized()
+      setAuthorized(isAuth);
+      await storage.save('auth', isAuth.toString())
     } catch (err){
       util.handleError(err, "Home.constructor")
     }
   });
 
   return (
-    <View style={styles.container}>
-      <Text>Google Authorization</Text>
-      {
-        (authorized && <Text>Authorized</Text>) ||
-        (!authorized &&
-          <Button title={"Authorize Google"} onPress={async () => {
-            try {
-              await google.authenticate();
-              let isAuth = await google.checkAuthorized();
-              console.log(isAuth);
-              if (isAuth !== true) alert("Error with Google Authentication")
-              else setAuthorized(isAuth);
-            } catch {
-              alert("Error with Google Authentication")
-            }
+    <SafeAreaView style={styles.container}>
+      <View style={styles.logo}>
+        <FontAwesomeIcon icon="hiking" size={38}></FontAwesomeIcon>
+        <Text style={styles.logoText}>SoniClimb</Text>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.description}>This is an application developed as part of a research project in Koc University.
+          It tracks and sonifies activity data, intended to be used during mountaineering activities.
+        </Text>
+      </View>
 
-          }}/>)
-      }
-      <Button title={"Your Activities"} onPress={() => {navigation.navigate("Activities")}}/>
-      <Button title={"New Activity"} onPress={async () => {await addActivityAndNavigate(navigation)}} />
-      <Button title={"Listen to Sounds"} onPress={() => {navigation.navigate("SoundDemo")}} />
-      <Button title={"Select Soundset"} onPress={() => {navigation.navigate("SoundSelection")}} />
-    </View>
+      <View style={styles.mainAction}>
+        <TouchableOpacity style={styles.iconButton} onPress={addActivityAndNavigate}>
+          <FontAwesomeIcon icon="plus-circle" size={76}></FontAwesomeIcon>
+        </TouchableOpacity>
+        <Text>Create an Activity</Text>
+      </View>
+      <View style={[styles.section, styles.indented]}>
+        <Text style={[styles.centered, styles.paragraph]}>You can see your previous activities, selected activity and configure the sounds you hear from the bottom tab</Text>
+
+        <View style={styles.horizontalButtons}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => {console.log("icon pressed"); navigation.navigate("Activities")}}>
+            <FontAwesomeIcon icon="bars" size={38}></FontAwesomeIcon>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.iconButton} onPress={() => {console.log("icon pressed"); navigation.navigate("Activity")}}>
+            <FontAwesomeIcon icon="hiking" size={38}></FontAwesomeIcon>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.iconButton} onPress={() => {navigation.navigate("Sounds")}}>
+            <FontAwesomeIcon icon="music" size={38}></FontAwesomeIcon>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={[styles.section, styles.bottomed]}>
+        <Text style={[styles.centered, styles.paragraph]}>Authorize by clicking on logos</Text>
+        <View style={styles.horizontalButtons}>
+          <TouchableOpacity style={styles.iconButton}
+                            onPress={async () => {
+                              if(!authorized) {
+                                try {
+                                  await google.authenticate();
+                                  let isAuth = await google.checkAuthorized();
+                                  console.log(isAuth);
+                                  if (isAuth !== true) alert("Error with Google Authentication")
+                                  else setAuthorized(isAuth);
+                                  await storage.save('auth', isAuth.toString())
+                                } catch {
+                                  alert("Error with Google Authentication")
+                                }
+                              } else {
+                                alert("Already authorized Google")
+                              }
+                            }}>
+            <FontAwesomeIcon icon={['fab', 'google']} size={38} color={authorized? 'green' : 'red'}></FontAwesomeIcon>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonList: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  button: {
-    margin: 10,
-    backgroundColor: 'green',
-    borderRadius: 5,
-    padding: 10,
-  },
-  text: {
-    color: '#fff',
-    textAlign: 'center',
-  },
-});
 
 export default Home;

@@ -39,11 +39,6 @@ let lastSaved = {
     time: null,
     value: null
   },
-  position: {
-    latitude: null,
-    longitude: null,
-    time: null
-  },
   pressure: {
     time: null,
     value: null
@@ -54,7 +49,6 @@ let data = {
   altitude: [],
   distance: [],
   pressure: [],
-  position: [],
   heartRate: [],
   time: []
 }

@@ -1,20 +1,15 @@
 import React from 'react';
-import {StyleSheet, Button, Text, View, Alert} from 'react-native';
+import {Text, View, Alert} from 'react-native';
 import util from "../utils/general";
+import {convertFormat} from "../utils/time"
 import activity from "../modules/general/activity";
 import {initStateUpdate} from '../utils/data';
 import {dataTypes} from '../constants/general';
-
-// todo make styles common
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 22,
-  },
-  baseText: {
-    fontFamily: "Cochin"
-  }
-});
+import {styles} from '../styles/general';
+import {TouchableOpacity} from 'react-native-gesture-handler';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import { CommonActions } from '@react-navigation/native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 const checkpointText = {
   threshold: "crossed",
@@ -22,14 +17,17 @@ const checkpointText = {
   time: "checkpoint"
 }
 
-const TripInProgress = ({route, navigation}) => {
+let confirmed = false;
+
+
+const InProgress = ({route, navigation}) => {
   const activityData = route.params.data;
 
   //todo these are initialized at each render? if so what a waste
   const [state, setState] = React.useState(util.createFromTemplate("progress"));
   const [checkpoints, setCheckpoints] = React.useState(util.createFromTemplate("lastSaved"));
   const [config, setConfig] = React.useState(util.createFromTemplate("config"));
-
+  //const [confirmed, setConfirmed] = React.useState(false); // to handle nav
 
   const handleStateChange = (name, value) => {
     setState(prevState => {
@@ -70,8 +68,8 @@ const TripInProgress = ({route, navigation}) => {
 
     if(activityData.started) {
       console.log("resuming activity");
-      let prevStored = await activity.resumeActivity(activityData);
-      console.log(prevStored);
+      let prevStored = util.deepCopy(await activity.resumeActivity(activityData));
+      Object.keys(prevStored).forEach((key) => prevStored[key].time = convertFormat(prevStored[key].time, "hour"));
       setCheckpoints(prevStored);
     } else {
       try {
@@ -97,9 +95,20 @@ const TripInProgress = ({route, navigation}) => {
           style: 'destructive',
           // If the user confirmed, then we dispatch the action we blocked earlier
           // This will continue the action that had triggered the removal of the screen
-          onPress: () => {
-            activity.pauseActivity();
-            if(e) navigation.dispatch(e.data.action);
+          onPress: async () => {
+            await activity.pauseActivity();
+            confirmed = true;
+
+            let actionType = e.data.action.type;
+            if(actionType == "POP" || actionType == "GO_BACK") {
+              navigation.dispatch(CommonActions.navigate({
+                name: 'Activity',
+                params: {data: activityData},
+              }))
+            } else if(e) {
+              navigation.dispatch(e.data.action);
+            }
+
             return false;
           },
         },
@@ -110,8 +119,9 @@ const TripInProgress = ({route, navigation}) => {
   React.useEffect(
     () =>
       navigation.addListener('beforeRemove', (e) => {
+        console.log("completed? " + activityData.completed + " confirmed " + confirmed);
         // Prevent default behavior of leaving the screen
-        if(!activityData.completed) {
+        if(!(activityData.completed || confirmed)) {
           e.preventDefault();
           handleBack(e);
         }
@@ -120,31 +130,43 @@ const TripInProgress = ({route, navigation}) => {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.baseText}> In Progress </Text>
-      {Object.keys(state).map((type, index) => {
-        return(
-          <View key = {index}>
-            <Text> {dataTypes[type].title}: {state[type].toFixed(2).toString()} </Text>
-            <Text> Last {config[type].interval} {dataTypes[type].unit} {checkpointText[config[type].mode]}:
-              {checkpoints[type].value && checkpoints[type].value + ", "  + checkpoints[type].time}
-              {!checkpoints[type].value && " -"}
-            </Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.gridContainer}>
+        {Object.keys(state).map((type, index) => {
+          return(
+            <View key={index} style={styles.gridItem}>
+              <Text>{dataTypes[type].title} </Text>
+              <View style={styles.box}>
+                <Text style={[styles.boxLevel, styles.boxTop]}>{state[type].toFixed(2).toString()} {dataTypes[type].unit}</Text>
+                <View style={[styles.boxLevel]}>
+                  <Text style={[styles.centered, styles.bold]}>Last {config[type].interval} {dataTypes[type].unit} {checkpointText[config[type].mode]}</Text>
+                  <Text style={styles.centered}>
+                    {(checkpoints[type].value != null) && checkpoints[type].value + ", "  + checkpoints[type].time}
+                    {(checkpoints[type].value == null) && " -"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )
+        })}
+        <View style={styles.gridItem}>
+          <Text>End Activity</Text>
+
+          <View style={styles.mainAction}>
+            <TouchableOpacity onPress={async () => {
+              let data = await activity.endActivity(activityData);
+              activityData.completed = data.completed;
+              navigation.navigate('Activity', {data})
+            }} >
+              <FontAwesomeIcon icon="stop-circle" size={100}></FontAwesomeIcon>
+            </TouchableOpacity>
+
           </View>
-        )
-      })}
-
-      <Button title="End Trip" onPress={async () => {
-        let endTime = await activity.endActivity(activityData);
-
-        activityData.completed = true;
-        activityData.endTime = endTime;
-        navigation.navigate('Activity', {data: activityData})
-      }} />
-    </View>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
-// todo save item data to db
 
-export default TripInProgress;
+export default InProgress;
 

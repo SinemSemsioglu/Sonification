@@ -8,10 +8,10 @@ import data from '../../utils/data';
 
 
 const createActivity = async () => {
-  return {
+  return saveActivity({
     id:  "id" + Math.floor(Math.random() * 1000), //todo unique id gen
     config: util.createFromTemplate("config")
-  }
+  })
 }
 
 const getActivities = async () => {
@@ -66,11 +66,10 @@ const startActivity = async (id, config) => {
     await initRecording(id, config, startTime);
 
     //todo add start time to activity obj
-    let activities = await getActivities();
-    let currActRecord = activities.find(act => act.id == id)
-    currActRecord.started = true;
-    currActRecord.startTime = startTime;
-    await storage.saveObject("activities", activities)
+    let currActRecord = await updateActivity(id, {
+      started: true,
+      startTime: startTime
+    })
 
     return startTime;
   } catch (err) {
@@ -106,26 +105,26 @@ const stopRecording = () => {
   data.endCollection();
 }
 
-const pauseActivity = () => {
+const pauseActivity = async () => {
   stopRecording();
-  sound.clearPlayers();
+  await sound.clearPlayers();
 }
 
 const endActivity = async (activity) => {
   try {
     stopRecording();
-    sound.clearPlayers();
+    await sound.clearPlayers();
     let endTime = time.getCurrentTime();
 
     // todo get all activities, find the one with this id and add finish_time + completed: true
-    let activities = await getActivities();
-    let currActRecord = activities.find(act => activity.id == act.id)
-    currActRecord.completed = true;
-    currActRecord.endTime = endTime;
-    await storage.saveObject("activities", activities)
+    let currActRecord = await updateActivity(activity.id, {
+      completed: true,
+      endTime: endTime,
+      state: data.getCurrentState() // todo for threshold params average is more meaningful
+    })
 
     // todo get strava data if logged in & available -- maybe compare the time started/ended
-    return endTime;
+    return currActRecord;
   } catch (err) {
     util.handleError(err, "activity.endActivity")
   }
@@ -144,6 +143,24 @@ const updateActivityConfig = async(id, config) => {
   return await storage.saveObject(id + "_config", config);
 }
 
+const getActivity = async (id) => {
+  let activities = await getActivities();
+  return activities.find(act => act.id == id)
+};
+
+const updateActivity = async (id, newFields) => {
+  let activities = await getActivities();
+  let curr = activities.find(act => act.id == id)
+
+  Object.keys(newFields).forEach((key) => {
+    curr[key] = newFields[key]
+  })
+
+  await storage.saveObject("activities", activities)
+
+  return curr;
+}
+
 module.exports = {
   getActivities,
   createActivity,
@@ -154,5 +171,6 @@ module.exports = {
   pauseActivity,
   getActivityData,
   getActivityConfig,
-  updateActivityConfig
+  updateActivityConfig,
+  getActivity
 }

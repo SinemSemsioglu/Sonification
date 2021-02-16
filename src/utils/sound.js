@@ -1,7 +1,5 @@
 import {
-    Player,
-    Recorder,
-    MediaStates
+    Player
 } from '@react-native-community/audio-toolkit';
 
 import util from './general'
@@ -85,34 +83,31 @@ const stopAudio = (mode, level) => {
     }
 }
 
-const clearPlayers = (isSummary = false) => {
+const clearPlayers = async (isSummary = false) => {
     let types = Object.keys(dataTypes);
 
-    if (isSummary) {
-        Object.keys(summaryConfig).forEach((type) => {
-            summaryConfig[type].forEach((level) => {
-                players[type][level].destroy((err) => {
-                    if (err) {
-                        console.log("error destroying player " + err.message);
-                    } else {
-                        console.log("player destroyed")
-                    }
-                });
-            })
-            // remove type from types
-            types.splice(types.indexOf(type),1);
-        })
-    }
+    try{
+        if (isSummary) {
+            let summaryTypes = Object.keys(summaryConfig);
 
-    types.forEach((type) => {
-        players[type].destroy((err) => {
-            if (err) {
-                console.log("error destroying player " + err.message);
-            } else {
-                console.log("player destroyed")
+            for(const type of summaryTypes){
+                let levels = summaryConfig[type]
+
+                for (const level of levels) {
+                    await players[type][level].destroy();
+                }
+
+                // remove type from types
+                types.splice(types.indexOf(type),1);
             }
-        });
-    })
+        }
+
+        for (const type of types) {
+            await players[type].destroy();
+        }
+    } catch (err)  {
+        util.handleError(err, "sound.clearPlayers")
+    }
 
     players = {};
 }

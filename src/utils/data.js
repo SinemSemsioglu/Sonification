@@ -21,9 +21,8 @@ const init = (id_, config_, startTime_, updateInterval = 60000, prevStored = nul
 
   startTime = startTime_;
 
-  lastSaved = prevStored ? prevStored : util.createFromTemplate("lastSaved");
+  lastSaved = prevStored ? util.deepCopy(prevStored) : util.createFromTemplate("lastSaved");
   state = util.deepCopy(lastSaved);
-
 
   timeInterval = setInterval(async () => {
     let currTime = time.getCurrentTime(); // getTimePassed
@@ -63,16 +62,15 @@ const handleData = async (type, currValue, currTime) => {
         case 'progress':
           prevValue = lastSaved[type].value;
 
+          if (type == "altitude") {
+            if (prevValue == null) altitudeOffset = currValue;
+            else currValue -= altitudeOffset;
+          }
+
           if(prevValue == null) {
             diff = 100000000; // todo maybe another value?
           } else {
             diff = Math.abs(currValue - prevValue);
-          }
-
-          if (type == "altitude") {
-            console.log("altitude value is " + currValue);
-            if (prevValue == null) altitudeOffset = currValue;
-            else currValue -= altitudeOffset;
           }
 
           break;

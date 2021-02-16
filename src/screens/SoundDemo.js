@@ -12,6 +12,8 @@ import util from "../utils/general";
 import sound from "../utils/sound";
 import {dataTypes} from "../constants/general";
 import storage from '../utils/storage';
+import {styles} from '../styles/general';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 
 const SoundDemo = ({route, navigation}) => {
   const types = Object.keys(dataTypes);
@@ -27,48 +29,22 @@ const SoundDemo = ({route, navigation}) => {
   });
 
   return (
-    <View>
-      <Text>Sound samples for {soundSet}</Text>
-      {types.map((type, index)=> {
-        return (
-          <View key={index}>
-            <Text>{dataTypes[type].title}</Text>
-            <Button title="Play" onPress={() => {
-               sound.playAudio(type);
-            }}/>
-          </View>
-        )
-      })}
-    </View>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.description}>Sound samples for {soundSet}</Text>
+      <View style={styles.section}>
+        {types.map((type, index)=> {
+          return (
+            <View key={index} style={styles.listItem}>
+              <Text>{dataTypes[type].title}</Text>
+              <TouchableOpacity style={styles.iconButton} onPress={() => {sound.playAudio(type);}}>
+                <FontAwesomeIcon icon="play-circle" size={24}></FontAwesomeIcon>
+              </TouchableOpacity>
+            </View>
+          )
+        })}
+      </View>
+    </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  ActivityIndicatorStyle: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  flexContainer: {
-    flex: 1,
-  },
-  tabBarContainer: {
-    backgroundColor: '#d3d3d3',
-    height: 56,
-    alignItems: 'center',
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    justifyContent: 'space-between',
-  },
-  button: {
-    fontSize: 24,
-  },
-  arrow: {
-    color: '#ef4771',
-  },
-  icon: {
-    width: 20,
-    height: 20,
-  },
-});
 
 export default SoundDemo;

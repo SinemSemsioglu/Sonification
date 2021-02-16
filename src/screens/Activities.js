@@ -1,29 +1,10 @@
 import React from 'react';
-import {SectionList, Button, StyleSheet, Text, View} from 'react-native';
+import {SectionList, Text, View, TouchableOpacity, TouchableHighlight, SafeAreaView, ScrollView} from 'react-native';
 import activity from '../modules/general/activity'
-import util from "../utils/general";
-
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 22,
-  },
-  sectionHeader: {
-    paddingTop: 2,
-    paddingLeft: 10,
-    paddingRight: 10,
-    paddingBottom: 2,
-    fontSize: 14,
-    fontWeight: 'bold',
-    backgroundColor: 'rgba(247,247,247,1.0)',
-  },
-  item: {
-    padding: 10,
-    fontSize: 18,
-    height: 44,
-  },
-});
+import util from '../utils/general';
+import {styles} from '../styles/general'
+import storage from '../utils/storage';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 
 
 const getActivities = async (setState) => {
@@ -60,18 +41,71 @@ const Activities = ({navigation}) => {
     }
   });
 
+  React.useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      console.log("focus removed");
+      try {
+        await getActivities(setState);
+      } catch (err){
+        util.handleError(err, "Activities.constructor")
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
   return (
-    <View style={styles.container}>
-      <SectionList
-        sections={[
-          {title: 'In Progress', data: state.inProgressTrips},
-          {title: 'Completed', data: state.completedTrips},
-        ]}
-        renderItem={({item}) => <Text onPress={() => navigation.navigate('Activity', {data: item})} style={styles.item}>{item.id}</Text>}
-        renderSectionHeader={({section}) => <Text style={styles.sectionHeader}>{section.title}</Text>}
-        keyExtractor={(item, index) => index}
-      />
-    </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+          {state.inProgressTrips.length > 0 &&
+            <View style={styles.section}>
+              <Text style={styles.header}>In Progress</Text>
+              {state.inProgressTrips.map((item, index) => {
+                return(
+                  <TouchableHighlight key={index} style={styles.activityListItem}>
+                    <Text style={styles.description} onPress={() => navigation.navigate('Activity', {screen: 'Activity', params: {data: item}})}>
+                      {item.id}
+                    </Text>
+                  </TouchableHighlight>
+                )
+
+              })}
+            </View>
+          }
+          {state.completedTrips.length > 0 &&
+            <View style={styles.section}>
+              <Text style={styles.header}>Completed</Text>
+              {state.completedTrips.map((item, index) => {
+                return(
+                  <TouchableHighlight key={index} style={styles.activityListItem}>
+                    <Text style={styles.description} onPress={() => navigation.navigate('Activity', {screen: 'Activity', params: {data: item}})}>
+                      {item.id}
+                    </Text>
+                  </TouchableHighlight>
+                )
+              })}
+            </View>
+          }
+          <View>
+            <Text style={styles.header}>New</Text>
+            <TouchableOpacity style={styles.iconButton} onPress={async ()=>{
+              let isAuth = util.parseBool(await storage.get('auth')); // getting auth might be put into an auth module or sth
+              if (isAuth) {
+                try {
+                  let newActivity = await activity.createActivity();
+                  navigation.navigate('Activity', {screen: 'Activity', params: {data: newActivity}});
+                } catch (err) {
+                  util.handleError(err, "Activity.addActivity");
+                }
+              } else {
+                alert("You need Google authorization before creating an activity")
+              }
+            }}>
+              <FontAwesomeIcon icon="plus-circle" size={76}></FontAwesomeIcon>
+            </TouchableOpacity>
+          </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

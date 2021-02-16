@@ -37,11 +37,17 @@ const deepCopy = (obj) => {
   return  JSON.parse(JSON.stringify(obj));
 }
 
+const parseBool = (boolStr) => {
+  // todo actually some other cases can also be handled
+  return boolStr == "true";
+}
+
 module.exports = {
   useConstructor,
   handleError,
   stringifyConfigValues,
   numerifyConfigValues,
   createFromTemplate,
-  deepCopy
+  deepCopy,
+  parseBool
 }
