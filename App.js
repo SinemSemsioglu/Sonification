@@ -4,27 +4,32 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { fab } from '@fortawesome/free-brands-svg-icons'
+import { faHiking, faHeadphones, faBars, faAssistiveListeningSystems, faCog,  faMusic, faPlusCircle, faPlayCircle, faStopCircle, faHome} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+
+library.add(fab, faHeadphones, faBars, faHiking, faAssistiveListeningSystems, faCog,  faMusic, faPlusCircle, faPlayCircle, faStopCircle, faHome);
+
 import Home from './src/screens/Home'
-import auth from './src/utils/auth'
-import TripInProgress from './src/screens/TripInProgress';
+import InProgress from './src/screens/InProgress';
 import Activities from './src/screens/Activities';
 import Activity from './src/screens/Activity';
 import ConfigActivity from './src/screens/ConfigActivity';
 import SummaryMusic from './src/screens/SummaryMusic'
 import SoundDemo from './src/screens/SoundDemo';
 import SoundSelection from './src/screens/SoundSelection';
+
 import {navigationRef} from './RootNavigation';
+import auth from './src/utils/auth'
 import storage from './src/utils/storage';
 import util from './src/utils/general';
 import constants from './src/constants/general';
-
-
 
 //const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 
-// TODO do this smwhereelse
 Linking.addEventListener('url', (redirectLink) => {
   console.log('in event listener with link ');
   console.log(redirectLink);
@@ -48,10 +53,9 @@ const ActivityStack = createStackNavigator();
 function ActivityStackScreen() {
   return (
     <ActivityStack.Navigator>
-      <ActivityStack.Screen name="Activities" component={Activities} />
       <ActivityStack.Screen name="Activity" component={Activity} />
       <ActivityStack.Screen name="ConfigActivity" component={ConfigActivity}/>
-      <ActivityStack.Screen name="TripInProgress" component={TripInProgress}/>
+      <ActivityStack.Screen name="InProgress" component={InProgress}/>
       <ActivityStack.Screen name="SummaryMusic" component={SummaryMusic}/>
     </ActivityStack.Navigator>
   );
@@ -113,9 +117,28 @@ const App: () => React$Node = () => {
 
   return (
     <NavigationContainer ref={navigationRef}>
-      <Tab.Navigator>
+      <Tab.Navigator screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+            switch(route.name) {
+              case "Home": iconName="home"; break;
+              case "Activities": iconName="bars"; break;
+              case "Activity": iconName="hiking"; break;
+              case "Sounds": iconName="music"; break;
+            }
+
+            // You can return any component that you like here!
+            return  <FontAwesomeIcon size={24} icon={iconName} color={color}/>;
+          },
+        })}
+       tabBarOptions={{
+         activeTintColor: 'tomato',
+         inactiveTintColor: 'gray',
+       }}
+      >
         <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Activities" component={ActivityStackScreen} />
+        <Tab.Screen name="Activities" component={Activities} />
+        <Tab.Screen name="Activity" component={ActivityStackScreen} />
         <Tab.Screen name="Sounds" component={SoundStackScreen} />
       </Tab.Navigator>
     </NavigationContainer>
@@ -173,8 +196,8 @@ const App: () => React$Node = () => {
           />
 
           <Stack.Screen
-            name="TripInProgress"
-            component={TripInProgress}
+            name="InProgress"
+            component={InProgress}
             options={{
               headerTintColor: 'green',
               title: 'Trip in Progress',
