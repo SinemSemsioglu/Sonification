@@ -98,7 +98,7 @@ const Activities = ({navigation}) => {
                   util.handleError(err, "Activity.addActivity");
                 }
               } else {
-                alert("You need Google authorization before creating an activity")
+                alert("You need Fitness authorization before creating an activity")
               }
             }}>
               <FontAwesomeIcon icon="plus-circle" size={76}></FontAwesomeIcon>

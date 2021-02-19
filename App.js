@@ -6,10 +6,10 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
-import { faHiking, faHeadphones, faBars, faAssistiveListeningSystems, faCog,  faMusic, faPlusCircle, faPlayCircle, faStopCircle, faHome} from '@fortawesome/free-solid-svg-icons'
+import {  faHeart, faHiking, faHeadphones, faBars, faAssistiveListeningSystems, faCog,  faMusic, faPlusCircle, faPlayCircle, faStopCircle, faHome} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 
-library.add(fab, faHeadphones, faBars, faHiking, faAssistiveListeningSystems, faCog,  faMusic, faPlusCircle, faPlayCircle, faStopCircle, faHome);
+library.add(fab, faHeart, faHeadphones, faBars, faHiking, faAssistiveListeningSystems, faCog,  faMusic, faPlusCircle, faPlayCircle, faStopCircle, faHome);
 
 import Home from './src/screens/Home'
 import InProgress from './src/screens/InProgress';

@@ -63,7 +63,10 @@ const handleData = async (type, currValue, currTime) => {
           prevValue = lastSaved[type].value;
 
           if (type == "altitude") {
-            if (prevValue == null) altitudeOffset = currValue;
+            if (prevValue == null) {
+              altitudeOffset = currValue;
+              currValue = 0;
+            }
             else currValue -= altitudeOffset;
           }
 
@@ -92,7 +95,7 @@ const handleData = async (type, currValue, currTime) => {
       if (diff >= savedValue) {
         let adjustedValue = currValue;
         if(mode !== "threshold") {
-          if(prevValue !== null && prevValue > currValue) adjustedValue += (savedValue - (currValue % savedValue));
+          if(prevValue !== null && prevValue > currValue) adjustedValue += (savedValue - (((currValue % savedValue) + savedValue) % savedValue));
           else adjustedValue -= (currValue % savedValue);
         } // rounding up to multiples of the interval
 

@@ -20,7 +20,7 @@ const Home = ({route, navigation}) => {
         util.handleError(err, "Home.addActivityAndNavigate");
       }
     } else {
-      alert("You need Google authorization before creating an activity")
+      alert("You need Fitness authorization before creating an activity")
     }
   }
 
@@ -73,7 +73,7 @@ const Home = ({route, navigation}) => {
         </View>
       </View>
       <View style={[styles.section, styles.bottomed]}>
-        <Text style={[styles.centered, styles.paragraph]}>Authorize by clicking on logos</Text>
+        <Text style={[styles.centered, styles.paragraph]}>Authorize the use of Fitness data by clicking, gets data from Google Fit on Android and Apple Health on iOS.</Text>
         <View style={styles.horizontalButtons}>
           <TouchableOpacity style={styles.iconButton}
                             onPress={async () => {
@@ -86,13 +86,13 @@ const Home = ({route, navigation}) => {
                                   else setAuthorized(isAuth);
                                   await storage.save('auth', isAuth.toString())
                                 } catch {
-                                  alert("Error with Google Authentication")
+                                  alert("Error with Fitness Authentication")
                                 }
                               } else {
-                                alert("Already authorized Google")
+                                alert("Already authorized Fitness")
                               }
                             }}>
-            <FontAwesomeIcon icon={['fab', 'google']} size={38} color={authorized? 'green' : 'red'}></FontAwesomeIcon>
+            <FontAwesomeIcon icon="heart" size={38} color={authorized? 'green' : 'red'}></FontAwesomeIcon>
           </TouchableOpacity>
         </View>
       </View>
