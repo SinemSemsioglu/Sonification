@@ -2,11 +2,11 @@
 let config =  {
   distance: {
     mode: 'progress',
-    interval: 1000
+    interval: 500
   },
   altitude: {
     mode: "progress",
-    interval: 100
+    interval: 10
   },
   heartRate: {
     mode: "threshold",
@@ -14,7 +14,7 @@ let config =  {
   },
   time: {
     mode: "progress",
-    interval: 60
+    interval: 10
   },
   pressure: {
     mode: "threshold",

@@ -41,7 +41,7 @@ const Home = ({route, navigation}) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.logo}>
         <FontAwesomeIcon icon="hiking" size={38}></FontAwesomeIcon>
-        <Text style={styles.logoText}>SoniClimb</Text>
+        <Text style={styles.logoText}>SonicTrail</Text>
       </View>
       <View style={styles.section}>
         <Text style={styles.description}>This is an application developed as part of a research project in Koc University.
